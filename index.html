@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Optimisation -->
+    <title>Calculateur Food Cost & Fiches Techniques pour Restaurateurs</title>
+    <meta name="description" content="Outil gratuit pour restaurateurs et pâtissiers : calculez votre Food Cost, gérez vos coefficients de perte, et générez vos fiches techniques en PDF.">
+    <meta name="keywords" content="food cost, restaurateur, fiche technique cuisine, rentabilité restaurant, calcul marge, pâtisserie, logiciel restauration gratuit">
+    <meta name="author" content="CH-Cook">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML2PDF pour l'export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Styles spécifiques pour cacher les éléments lors de l'export PDF */
+        .pdf-hide { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Emplacement Google Ads Haut -->
+    <div class="pdf-hide max-w-5xl mx-auto mt-4 bg-gray-200 text-center text-sm text-gray-500 py-4 border border-dashed border-gray-400 rounded">
+        [Emplacement Google Ads - 728x90]
+    </div>
+
+    <main class="max-w-5xl mx-auto my-8 bg-white p-8 rounded-xl shadow-lg" id="recipe-card">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col md:flex-row justify-between items-center border-b pb-6 mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Fiche Technique & Food Cost</h1>
+                <p class="text-gray-500 mt-1">Optimisation de la rentabilité F&B</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-3 pdf-hide">
+                <button onclick="exportPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- Paramètres Généraux -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Nom du Plat</label>
+                <input type="text" id="recipe-name" placeholder="Ex: Filet de Bœuf Wellington" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre de Portions</label>
+                <input type="number" id="portions" value="4" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Food Cost Cible (%)</label>
+                <input type="number" id="target-fc" value="28" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">TVA (%)</label>
+                <select id="vat-rate" onchange="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="8.1">Suisse - Standard (8.1%)</option>
+                    <option value="2.6">Suisse - Réduit (2.6%)</option>
+                    <option value="10">France - Restauration (10%)</option>
+                    <option value="20">France - Standard (20%)</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Tableau des Ingrédients -->
+        <section class="mb-8 overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-800 text-white text-sm uppercase tracking-wider">
+                        <th class="p-3 rounded-tl-lg">Ingrédient</th>
+                        <th class="p-3">Qté Brute</th>
+                        <th class="p-3">Unité</th>
+                        <th class="p-3">Prix Unitaire</th>
+                        <th class="p-3" title="Rendement après épluchage/cuisson">Rendement (%)</th>
+                        <th class="p-3 rounded-tr-lg text-right">Coût Total</th>
+                        <th class="p-3 pdf-hide"></th>
+                    </tr>
+                </thead>
+                <tbody id="ingredients-list">
+                    <!-- Ligne par défaut -->
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-2"><input type="text" value="Filet de Bœuf" class="w-full p-1 border rounded"></td>
+                        <td class="p-2"><input type="number" value="1" step="0.01" oninput="calculateTotals()" class="qty w-20 p-1 border rounded"></td>
+                        <td class="p-2">
+                            <select class="p-1 border rounded w-full">
+                                <option>kg</option>
+                                <option>L</option>
+                                <option>pièce</option>
+                            </select>
+                        </td>
+                        <td class="p-2"><input type="number" value="45.00" step="0.1" oninput="calculateTotals()" class="price w-24 p-1 border rounded"></td>
+                        <td class="p-2"><input type="number" value="85" max="100" min="1" oninput="calculateTotals()" class="yield w-20 p-1 border rounded"></td>
+                        <td class="p-2 text-right font-semibold text-gray-700 cost-cell">0.00</td>
+                        <td class="p-2 pdf-hide text-center">
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button onclick="addRow()" class="pdf-hide mt-4 text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
+                <i class="fa-solid fa-plus-circle"></i> Ajouter un ingrédient
+            </button>
+        </section>
+
+        <!-- Résultats et Pricing -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Coûts de Revient</h3>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Coût Total Matière :</span>
+                    <span id="total-cost" class="font-bold text-xl text-gray-900">0.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Coût par Portion :</span>
+                    <span id="portion-cost" class="font-bold text-xl text-blue-600">0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 text-white p-6 rounded-lg shadow-inner">
+                <h3 class="text-lg font-bold mb-4 border-b border-gray-600 pb-2">Prix de Vente Conseillé</h3>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-300">Prix HT (Basé sur FC cible) :</span>
+                    <span id="suggested-price-ht" class="font-bold text-xl">0.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-300">Prix TTC (TVA incluse) :</span>
+                    <span id="suggested-price-ttc" class="font-bold text-2xl text-green-400">0.00</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Emplacement Google Ads Bas -->
+    <div class="pdf-hide max-w-5xl mx-auto mb-8 bg-gray-200 text-center text-sm text-gray-500 py-4 border border-dashed border-gray-400 rounded">
+        [Emplacement Google Ads - 728x90]
+    </div>
+
+    <script>
+        // Fonction d'ajout de ligne
+        function addRow() {
+            const tbody = document.getElementById('ingredients-list');
+            const tr = document.createElement('tr');
+            tr.className = "border-b hover:bg-gray-50 transition-colors";
+            tr.innerHTML = `
+                <td class="p-2"><input type="text" placeholder="Ingrédient" class="w-full p-1 border rounded"></td>
+                <td class="p-2"><input type="number" value="0" step="0.01" oninput="calculateTotals()" class="qty w-20 p-1 border rounded"></td>
+                <td class="p-2">
+                    <select class="p-1 border rounded w-full">
+                        <option>kg</option><option>g</option><option>L</option><option>cl</option><option>pièce</option>
+                    </select>
+                </td>
+                <td class="p-2"><input type="number" value="0" step="0.1" oninput="calculateTotals()" class="price w-24 p-1 border rounded"></td>
+                <td class="p-2"><input type="number" value="100" max="100" min="1" oninput="calculateTotals()" class="yield w-20 p-1 border rounded"></td>
+                <td class="p-2 text-right font-semibold text-gray-700 cost-cell">0.00</td>
+                <td class="p-2 pdf-hide text-center">
+                    <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Fonction de suppression de ligne
+        function removeRow(btn) {
+            btn.closest('tr').remove();
+            calculateTotals();
+        }
+
+        // Calculs dynamiques
+        function calculateTotals() {
+            let totalCost = 0;
+            const rows = document.querySelectorAll('#ingredients-list tr');
+            
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                const price = parseFloat(row.querySelector('.price').value) || 0;
+                const yieldPercent = parseFloat(row.querySelector('.yield').value) || 100;
+                
+                // Formule EHL : Coût = (Quantité Brute * Prix Unitaire) / (Rendement / 100)
+                const cost = (qty * price) / (yieldPercent / 100);
+                row.querySelector('.cost-cell').innerText = cost.toFixed(2);
+                totalCost += cost;
+            });
+
+            const portions = parseInt(document.getElementById('portions').value) || 1;
+            const targetFc = parseFloat(document.getElementById('target-fc').value) || 100;
+            const vatRate = parseFloat(document.getElementById('vat-rate').value) || 0;
+
+            const portionCost = totalCost / portions;
+            const suggestedPriceHT = portionCost / (targetFc / 100);
+            const suggestedPriceTTC = suggestedPriceHT * (1 + (vatRate / 100));
+
+            // Mise à jour de l'affichage
+            document.getElementById('total-cost').innerText = totalCost.toFixed(2);
+            document.getElementById('portion-cost').innerText = portionCost.toFixed(2);
+            document.getElementById('suggested-price-ht').innerText = suggestedPriceHT.toFixed(2);
+            document.getElementById('suggested-price-ttc').innerText = suggestedPriceTTC.toFixed(2);
+        }
+
+        // Fonction d'export PDF propre
+        function exportPDF() {
+            // Cacher temporairement les éléments de contrôle pour l'impression
+            const hideElements = document.querySelectorAll('.pdf-hide');
+            hideElements.forEach(el => el.style.display = 'none');
+            
+            // Modifier l'apparence des inputs pour qu'ils ressemblent à du texte brut sur le PDF
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.style.border = 'none';
+                input.style.backgroundColor = 'transparent';
+                input.style.appearance = 'none';
+                input.style.boxShadow = 'none';
+            });
+
+            const element = document.getElementById('recipe-card');
+            const recipeName = document.getElementById('recipe-name').value || 'Fiche_Technique';
+            const opt = {
+                margin:       10,
+                filename:     `${recipeName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Générer le PDF, puis restaurer l'interface
+            html2pdf().set(opt).from(element).save().then(() => {
+                hideElements.forEach(el => el.style.display = '');
+                inputs.forEach(input => {
+                    input.style.border = '';
+                    input.style.backgroundColor = '';
+                    input.style.appearance = '';
+                });
+            });
+        }
+
+        // Initialisation au chargement
+        window.onload = calculateTotals;
+    </script>
+</body>
+</html>
