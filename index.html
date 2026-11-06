@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Optimisation -->
-    <title>Calculateur Food Cost & Fiches Techniques pour Restaurateurs</title>
-    <meta name="description" content="Outil gratuit pour restaurateurs et pâtissiers : calculez votre Food Cost, gérez vos coefficients de perte, et générez vos fiches techniques en PDF.">
-    <meta name="keywords" content="food cost, restaurateur, fiche technique cuisine, rentabilité restaurant, calcul marge, pâtisserie, logiciel restauration gratuit">
+    <title>Suite Complète de Gestion F&B - Food Cost, ABC, ETP & Contrôle des Coûts</title>
+    <meta name="description" content="Outil tout-en-un pour restaurateurs et pâtissiers : Calculateur de Food Cost, Analyse d'inventaire ABC, Contrôle des coûts consommés/vendus et Gestion des ETP.">
+    <meta name="keywords" content="food cost, analyse abc stock, etp restaurant, controle des couts fb, fiche technique cuisine, rentabilite restauration">
     <meta name="author" content="CH-Cook">
 
     <!-- Tailwind CSS -->
@@ -18,163 +18,371 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* Styles spécifiques pour cacher les éléments lors de l'export PDF */
         .pdf-hide { display: block; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Emplacement Google Ads Haut -->
-    <div class="pdf-hide max-w-5xl mx-auto mt-4 bg-gray-200 text-center text-sm text-gray-500 py-4 border border-dashed border-gray-400 rounded">
-        [Emplacement Google Ads - 728x90]
+    <!-- Pub Google Ads Haut -->
+    <div class="pdf-hide max-w-6xl mx-auto w-full mt-4 bg-gray-200 text-center text-sm text-gray-500 py-3 border border-dashed border-gray-400 rounded">
+        [Emplacement Google Ads - 728x90 Banner]
     </div>
 
-    <main class="max-w-5xl mx-auto my-8 bg-white p-8 rounded-xl shadow-lg" id="recipe-card">
+    <!-- Interface Principale -->
+    <main class="max-w-6xl mx-auto w-full my-6 bg-white p-6 md:p-8 rounded-xl shadow-lg flex-grow" id="app-container">
         
         <!-- En-tête -->
-        <header class="flex flex-col md:flex-row justify-between items-center border-b pb-6 mb-6">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Fiche Technique & Food Cost</h1>
-                <p class="text-gray-500 mt-1">Optimisation de la rentabilité F&B</p>
+                <h1 class="text-3xl font-bold text-gray-900">Suite de Gestion F&B</h1>
+                <p class="text-gray-500 text-sm mt-1">Outils d'optimisation financière et opérationnelle pour la restauration</p>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-3 pdf-hide">
-                <button onclick="exportPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+            <div id="pdf-action-btn" class="mt-4 md:mt-0 pdf-hide">
+                <button onclick="exportPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Imprimer / Exporter PDF
                 </button>
             </div>
         </header>
 
-        <!-- Paramètres Généraux -->
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Nom du Plat</label>
-                <input type="text" id="recipe-name" placeholder="Ex: Filet de Bœuf Wellington" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre de Portions</label>
-                <input type="number" id="portions" value="4" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Food Cost Cible (%)</label>
-                <input type="number" id="target-fc" value="28" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">TVA (%)</label>
-                <select id="vat-rate" onchange="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 border focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="8.1">Suisse - Standard (8.1%)</option>
-                    <option value="2.6">Suisse - Réduit (2.6%)</option>
-                    <option value="10">France - Restauration (10%)</option>
-                    <option value="20">France - Standard (20%)</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- Tableau des Ingrédients -->
-        <section class="mb-8 overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-800 text-white text-sm uppercase tracking-wider">
-                        <th class="p-3 rounded-tl-lg">Ingrédient</th>
-                        <th class="p-3">Qté Brute</th>
-                        <th class="p-3">Unité</th>
-                        <th class="p-3">Prix Unitaire</th>
-                        <th class="p-3" title="Rendement après épluchage/cuisson">Rendement (%)</th>
-                        <th class="p-3 rounded-tr-lg text-right">Coût Total</th>
-                        <th class="p-3 pdf-hide"></th>
-                    </tr>
-                </thead>
-                <tbody id="ingredients-list">
-                    <!-- Ligne par défaut -->
-                    <tr class="border-b hover:bg-gray-50 transition-colors">
-                        <td class="p-2"><input type="text" value="Filet de Bœuf" class="w-full p-1 border rounded"></td>
-                        <td class="p-2"><input type="number" value="1" step="0.01" oninput="calculateTotals()" class="qty w-20 p-1 border rounded"></td>
-                        <td class="p-2">
-                            <select class="p-1 border rounded w-full">
-                                <option>kg</option>
-                                <option>L</option>
-                                <option>pièce</option>
-                            </select>
-                        </td>
-                        <td class="p-2"><input type="number" value="45.00" step="0.1" oninput="calculateTotals()" class="price w-24 p-1 border rounded"></td>
-                        <td class="p-2"><input type="number" value="85" max="100" min="1" oninput="calculateTotals()" class="yield w-20 p-1 border rounded"></td>
-                        <td class="p-2 text-right font-semibold text-gray-700 cost-cell">0.00</td>
-                        <td class="p-2 pdf-hide text-center">
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <button onclick="addRow()" class="pdf-hide mt-4 text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
-                <i class="fa-solid fa-plus-circle"></i> Ajouter un ingrédient
+        <!-- Navigation par Onglets -->
+        <nav class="flex border-b border-gray-200 mb-8 bg-gray-50 p-1.5 rounded-lg pdf-hide overflow-x-auto">
+            <button onclick="switchTab('recipe')" id="tab-recipe" class="tab-btn flex-1 min-w-[140px] py-2.5 px-3 text-sm font-semibold rounded-md text-blue-700 bg-white shadow-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-utensils"></i> Fiche Technique
             </button>
-        </section>
+            <button onclick="switchTab('abc')" id="tab-abc" class="tab-btn flex-1 min-w-[140px] py-2.5 px-3 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-boxes-stacked"></i> Analyse ABC
+            </button>
+            <button onclick="switchTab('cost')" id="tab-cost" class="tab-btn flex-1 min-w-[140px] py-2.5 px-3 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-calculator"></i> Coût Consommé / Vendu
+            </button>
+            <button onclick="switchTab('fte')" id="tab-fte" class="tab-btn flex-1 min-w-[140px] py-2.5 px-3 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-users"></i> ETP & Main-d'œuvre
+            </button>
+        </nav>
 
-        <!-- Résultats et Pricing -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Coûts de Revient</h3>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Coût Total Matière :</span>
-                    <span id="total-cost" class="font-bold text-xl text-gray-900">0.00</span>
+        <!-- MODULE 1: FICHE TECHNIQUE & FOOD COST -->
+        <section id="section-recipe" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nom du Plat</label>
+                    <input type="text" id="recipe-name" value="Filet de Bœuf Wellington" class="w-full border-gray-300 rounded-md p-2 text-sm border focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Coût par Portion :</span>
-                    <span id="portion-cost" class="font-bold text-xl text-blue-600">0.00</span>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre de Portions</label>
+                    <input type="number" id="portions" value="4" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 text-sm border focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Food Cost Cible (%)</label>
+                    <input type="number" id="target-fc" value="28" min="1" oninput="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 text-sm border focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">TVA (%)</label>
+                    <select id="vat-rate" onchange="calculateTotals()" class="w-full border-gray-300 rounded-md p-2 text-sm border focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="8.1">Suisse - Standard (8.1%)</option>
+                        <option value="2.6">Suisse - Réduit (2.6%)</option>
+                        <option value="10">France - Restauration (10%)</option>
+                        <option value="20">France - Standard (20%)</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-gray-800 text-white p-6 rounded-lg shadow-inner">
-                <h3 class="text-lg font-bold mb-4 border-b border-gray-600 pb-2">Prix de Vente Conseillé</h3>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-300">Prix HT (Basé sur FC cible) :</span>
-                    <span id="suggested-price-ht" class="font-bold text-xl">0.00</span>
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-800 text-white text-xs uppercase tracking-wider">
+                            <th class="p-3 rounded-tl-lg">Ingrédient</th>
+                            <th class="p-3">Qté Brute</th>
+                            <th class="p-3">Unité</th>
+                            <th class="p-3">Prix Unitaire (CHF/€)</th>
+                            <th class="p-3" title="Rendement après épluchage/cuisson">Rendement (%)</th>
+                            <th class="p-3 text-right">Coût Total</th>
+                            <th class="p-3 pdf-hide"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ingredients-list">
+                        <!-- Lignes dynamiques -->
+                    </tbody>
+                </table>
+                <button onclick="addRow()" class="pdf-hide mt-3 text-sm text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1">
+                    <i class="fa-solid fa-plus-circle"></i> Ajouter un ingrédient
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 border-b pb-2">Coûts de Revient</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600 text-sm">Coût Total Matière :</span>
+                        <span id="total-cost" class="font-bold text-lg text-gray-900">0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">Coût par Portion :</span>
+                        <span id="portion-cost" class="font-bold text-xl text-blue-600">0.00</span>
+                    </div>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Prix TTC (TVA incluse) :</span>
-                    <span id="suggested-price-ttc" class="font-bold text-2xl text-green-400">0.00</span>
+                <div class="bg-gray-900 text-white p-5 rounded-lg shadow-inner">
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-3 border-b border-gray-700 pb-2">Prix de Vente Conseillé</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-300 text-sm">Prix HT (Food Cost Cible) :</span>
+                        <span id="suggested-price-ht" class="font-bold text-lg">0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300 text-sm">Prix TTC (TVA incluse) :</span>
+                        <span id="suggested-price-ttc" class="font-bold text-2xl text-green-400">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 2: ANALYSE D'INVENTAIRE ABC -->
+        <section id="section-abc" class="tab-content hidden">
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6 rounded-r-lg">
+                <h2 class="text-sm font-bold text-blue-900">Méthode de Classification ABC (Loi de Pareto)</h2>
+                <p class="text-xs text-blue-800 mt-1">
+                    Catégorie A (~80% de la valeur totale, contrôle strict) | Catégorie B (~15% de la valeur) | Catégorie C (~5% de la valeur, contrôle souple).
+                </p>
+            </div>
+
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-left border-collapse" id="abc-table">
+                    <thead>
+                        <tr class="bg-gray-800 text-white text-xs uppercase tracking-wider">
+                            <th class="p-3 rounded-tl-lg">Article / Ingrédient</th>
+                            <th class="p-3">Volume Annuel Consommé</th>
+                            <th class="p-3">Prix Unitaire Moy.</th>
+                            <th class="p-3">Valeur d'Usage Total</th>
+                            <th class="p-3 text-center rounded-tr-lg">Catégorie ABC</th>
+                            <th class="p-3 pdf-hide"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="abc-list">
+                        <!-- Rempli en JS -->
+                    </tbody>
+                </table>
+                <button onclick="addABCRow()" class="pdf-hide mt-3 text-sm text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1">
+                    <i class="fa-solid fa-plus-circle"></i> Ajouter un article en stock
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                    <div class="text-red-700 text-xs font-bold uppercase">Catégorie A (Critique)</div>
+                    <div id="cat-a-count" class="text-2xl font-black text-red-800 mt-1">0 article</div>
+                    <div id="cat-a-val" class="text-xs text-red-600 mt-1">0.00 (0%)</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                    <div class="text-amber-700 text-xs font-bold uppercase">Catégorie B (Intermédiaire)</div>
+                    <div id="cat-b-count" class="text-2xl font-black text-amber-800 mt-1">0 article</div>
+                    <div id="cat-b-val" class="text-xs text-amber-600 mt-1">0.00 (0%)</div>
+                </div>
+                <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                    <div class="text-green-700 text-xs font-bold uppercase">Catégorie C (Volume)</div>
+                    <div id="cat-c-count" class="text-2xl font-black text-green-800 mt-1">0 article</div>
+                    <div id="cat-c-val" class="text-xs text-green-600 mt-1">0.00 (0%)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 3: COÛT CONSOMMÉ VS VENDU -->
+        <section id="section-cost" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <!-- Entrées données -->
+                <div class="space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-800 border-b pb-2">1. Mouvements de Stock</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Inventaire Initial</label>
+                            <input type="number" id="opening-stock" value="12000" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Achats de la période</label>
+                            <input type="number" id="purchases-stock" value="35000" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs text-gray-600 mb-1">Inventaire Final</label>
+                            <input type="number" id="closing-stock" value="14500" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-gray-800 border-b pb-2 pt-2">2. Ajustements & Transferts</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Transf. Entrants</label>
+                            <input type="number" id="transfers-in" value="500" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Transf. Sortants</label>
+                            <input type="number" id="transfers-out" value="800" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Repas Personnel</label>
+                            <input type="number" id="staff-meals" value="1200" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm">
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-gray-800 border-b pb-2 pt-2">3. Chiffre d'Affaires F&B</h3>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Ventes Totales Nettes</label>
+                        <input type="number" id="total-sales" value="115000" oninput="calculateCostControl()" class="w-full border rounded p-2 text-sm font-bold text-blue-900">
+                    </div>
+                </div>
+
+                <!-- Résultats -->
+                <div class="flex flex-col justify-between space-y-4">
+                    <div class="bg-gray-900 text-white p-6 rounded-lg shadow-md">
+                        <div class="text-xs uppercase text-gray-400 font-bold mb-1">Coût des Marchandises Consommées</div>
+                        <div id="cost-consumed" class="text-3xl font-black text-amber-400">0.00</div>
+                        <p class="text-xs text-gray-400 mt-1">(Inventaire Initial + Achats - Inventaire Final)</p>
+                    </div>
+
+                    <div class="bg-gray-900 text-white p-6 rounded-lg shadow-md">
+                        <div class="text-xs uppercase text-gray-400 font-bold mb-1">Coût des Marchandises Vendues (Cost of Sales)</div>
+                        <div id="cost-sold" class="text-3xl font-black text-green-400">0.00</div>
+                        <p class="text-xs text-gray-400 mt-1">(Consommé + Transferts In - Transferts Out - Repas Personnel)</p>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+                        <div class="text-xs uppercase text-blue-800 font-bold mb-1">Food / Beverage Cost Réel (%)</div>
+                        <div id="real-cost-percent" class="text-4xl font-black text-blue-900">0.00 %</div>
+                        <p class="text-xs text-blue-700 mt-1">Ratio : (Coût Vendu / Chiffre d'Affaires Nettes) × 100</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 4: PRODUCTIVITÉ & ETP (FTE) -->
+        <section id="section-fte" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <!-- Inputs ETP -->
+                <div class="space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-800 border-b pb-2">Paramètres de Main-d'œuvre</h3>
+                    
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Heures Travaillées Totales (Semaine)</label>
+                        <input type="number" id="hours-worked" value="320" oninput="calculateFTE()" class="w-full border rounded p-2 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Base d'Heures d'un ETP Plein Temps / Semaine</label>
+                        <input type="number" id="fte-base" value="42" oninput="calculateFTE()" class="w-full border rounded p-2 text-sm" title="Standard Suisse: 42h, France: 35h ou 39h">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Masse Salariale Totale (Période)</label>
+                        <input type="number" id="labor-cost" value="28000" oninput="calculateFTE()" class="w-full border rounded p-2 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Chiffre d'Affaires Réalisé (Période)</label>
+                        <input type="number" id="fte-sales" value="85000" oninput="calculateFTE()" class="w-full border rounded p-2 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">Nombre Total de Couverts Servis</label>
+                        <input type="number" id="covers-count" value="1800" oninput="calculateFTE()" class="w-full border rounded p-2 text-sm">
+                    </div>
+                </div>
+
+                <!-- Outputs ETP -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-gray-900 text-white p-5 rounded-lg">
+                        <div class="text-xs uppercase text-gray-400 font-semibold">Équivalents Temps Plein (ETP / FTE)</div>
+                        <div id="fte-result" class="text-4xl font-black text-blue-400 mt-1">0.00 ETP</div>
+                        <p class="text-xs text-gray-400 mt-1">Volume d'effectif réel équivalent</p>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg flex justify-between items-center">
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Ratio Masse Salariale / CA</div>
+                            <div id="labor-cost-ratio" class="text-2xl font-bold text-gray-900 mt-1">0.0 %</div>
+                        </div>
+                        <i class="fa-solid fa-percent text-gray-300 text-3xl"></i>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg flex justify-between items-center">
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Ventes par Heure Travaillée</div>
+                            <div id="sales-per-hour" class="text-2xl font-bold text-green-600 mt-1">0.00</div>
+                        </div>
+                        <i class="fa-solid fa-clock text-gray-300 text-3xl"></i>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg flex justify-between items-center">
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Coût Main-d'œuvre / Couvert</div>
+                            <div id="cost-per-cover" class="text-2xl font-bold text-blue-600 mt-1">0.00</div>
+                        </div>
+                        <i class="fa-solid fa-utensils text-gray-300 text-3xl"></i>
+                    </div>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Emplacement Google Ads Bas -->
-    <div class="pdf-hide max-w-5xl mx-auto mb-8 bg-gray-200 text-center text-sm text-gray-500 py-4 border border-dashed border-gray-400 rounded">
-        [Emplacement Google Ads - 728x90]
+    <!-- Pub Google Ads Bas -->
+    <div class="pdf-hide max-w-6xl mx-auto w-full mb-6 bg-gray-200 text-center text-sm text-gray-500 py-3 border border-dashed border-gray-400 rounded">
+        [Emplacement Google Ads - 728x90 Banner]
     </div>
 
+    <!-- SCRIPTS JS -->
     <script>
-        // Fonction d'ajout de ligne
-        function addRow() {
+        // Data Init pour ABC
+        let abcItems = [
+            { name: "Filet de Bœuf", volume: 450, price: 48.00 },
+            { name: "Saumon Frais", volume: 300, price: 28.00 },
+            { name: "Huile d'Olive Extra", volume: 200, price: 14.50 },
+            { name: "Farine T55", volume: 1200, price: 1.10 },
+            { name: "Sel de Guérande", volume: 150, price: 0.80 }
+        ];
+
+        // Switch d'onglets
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-blue-700', 'bg-white', 'shadow-sm');
+                el.classList.add('text-gray-600');
+            });
+            
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.add('text-blue-700', 'bg-white', 'shadow-sm');
+            activeBtn.classList.remove('text-gray-600');
+        }
+
+        // --- MODULE 1: FICHE TECHNIQUE ---
+        function addRow(name="", qty=1, unit="kg", price=10, yieldP=100) {
             const tbody = document.getElementById('ingredients-list');
             const tr = document.createElement('tr');
             tr.className = "border-b hover:bg-gray-50 transition-colors";
             tr.innerHTML = `
-                <td class="p-2"><input type="text" placeholder="Ingrédient" class="w-full p-1 border rounded"></td>
-                <td class="p-2"><input type="number" value="0" step="0.01" oninput="calculateTotals()" class="qty w-20 p-1 border rounded"></td>
+                <td class="p-2"><input type="text" value="${name}" placeholder="Ingrédient" class="w-full p-1 border rounded text-sm"></td>
+                <td class="p-2"><input type="number" value="${qty}" step="0.01" oninput="calculateTotals()" class="qty w-20 p-1 border rounded text-sm"></td>
                 <td class="p-2">
-                    <select class="p-1 border rounded w-full">
-                        <option>kg</option><option>g</option><option>L</option><option>cl</option><option>pièce</option>
+                    <select class="p-1 border rounded w-full text-sm">
+                        <option ${unit==='kg'?'selected':''}>kg</option>
+                        <option ${unit==='g'?'selected':''}>g</option>
+                        <option ${unit==='L'?'selected':''}>L</option>
+                        <option ${unit==='cl'?'selected':''}>cl</option>
+                        <option ${unit==='pièce'?'selected':''}>pièce</option>
                     </select>
                 </td>
-                <td class="p-2"><input type="number" value="0" step="0.1" oninput="calculateTotals()" class="price w-24 p-1 border rounded"></td>
-                <td class="p-2"><input type="number" value="100" max="100" min="1" oninput="calculateTotals()" class="yield w-20 p-1 border rounded"></td>
-                <td class="p-2 text-right font-semibold text-gray-700 cost-cell">0.00</td>
+                <td class="p-2"><input type="number" value="${price}" step="0.1" oninput="calculateTotals()" class="price w-24 p-1 border rounded text-sm"></td>
+                <td class="p-2"><input type="number" value="${yieldP}" max="100" min="1" oninput="calculateTotals()" class="yield w-20 p-1 border rounded text-sm"></td>
+                <td class="p-2 text-right font-semibold text-gray-700 cost-cell text-sm">0.00</td>
                 <td class="p-2 pdf-hide text-center">
                     <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
+            calculateTotals();
         }
 
-        // Fonction de suppression de ligne
         function removeRow(btn) {
             btn.closest('tr').remove();
             calculateTotals();
         }
 
-        // Calculs dynamiques
         function calculateTotals() {
             let totalCost = 0;
             const rows = document.querySelectorAll('#ingredients-list tr');
@@ -184,7 +392,6 @@
                 const price = parseFloat(row.querySelector('.price').value) || 0;
                 const yieldPercent = parseFloat(row.querySelector('.yield').value) || 100;
                 
-                // Formule EHL : Coût = (Quantité Brute * Prix Unitaire) / (Rendement / 100)
                 const cost = (qty * price) / (yieldPercent / 100);
                 row.querySelector('.cost-cell').innerText = cost.toFixed(2);
                 totalCost += cost;
@@ -198,51 +405,148 @@
             const suggestedPriceHT = portionCost / (targetFc / 100);
             const suggestedPriceTTC = suggestedPriceHT * (1 + (vatRate / 100));
 
-            // Mise à jour de l'affichage
             document.getElementById('total-cost').innerText = totalCost.toFixed(2);
             document.getElementById('portion-cost').innerText = portionCost.toFixed(2);
             document.getElementById('suggested-price-ht').innerText = suggestedPriceHT.toFixed(2);
             document.getElementById('suggested-price-ttc').innerText = suggestedPriceTTC.toFixed(2);
         }
 
-        // Fonction d'export PDF propre
+        // --- MODULE 2: ANALYSE ABC ---
+        function renderABC() {
+            const tbody = document.getElementById('abc-list');
+            tbody.innerHTML = '';
+            
+            let totalValue = abcItems.reduce((sum, item) => sum + (item.volume * item.price), 0);
+            abcItems.sort((a, b) => (b.volume * b.price) - (a.volume * a.price));
+
+            let cumVal = 0;
+            let countA = 0, countB = 0, countC = 0;
+            let valA = 0, valB = 0, valC = 0;
+
+            abcItems.forEach((item, idx) => {
+                const itemVal = item.volume * item.price;
+                cumVal += itemVal;
+                const cumPercent = (cumVal / totalValue) * 100;
+                
+                let cat = 'C';
+                let catBadge = 'bg-green-100 text-green-800 border-green-300';
+                if (cumPercent <= 80) {
+                    cat = 'A';
+                    catBadge = 'bg-red-100 text-red-800 border-red-300';
+                    countA++; valA += itemVal;
+                } else if (cumPercent <= 95) {
+                    cat = 'B';
+                    catBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+                    countB++; valB += itemVal;
+                } else {
+                    countC++; valC += itemVal;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-2"><input type="text" value="${item.name}" onchange="updateABCItem(${idx}, 'name', this.value)" class="w-full p-1 border rounded text-sm"></td>
+                    <td class="p-2"><input type="number" value="${item.volume}" onchange="updateABCItem(${idx}, 'volume', this.value)" class="w-24 p-1 border rounded text-sm"></td>
+                    <td class="p-2"><input type="number" value="${item.price}" onchange="updateABCItem(${idx}, 'price', this.value)" class="w-24 p-1 border rounded text-sm"></td>
+                    <td class="p-2 font-bold text-gray-800 text-sm">${itemVal.toFixed(2)}</td>
+                    <td class="p-2 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-black border ${catBadge}">${cat}</span></td>
+                    <td class="p-2 pdf-hide text-center"><button onclick="removeABCItem(${idx})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('cat-a-count').innerText = `${countA} articles`;
+            document.getElementById('cat-a-val').innerText = `${valA.toFixed(2)} (${totalValue ? ((valA/totalValue)*100).toFixed(1) : 0}%)`;
+
+            document.getElementById('cat-b-count').innerText = `${countB} articles`;
+            document.getElementById('cat-b-val').innerText = `${valB.toFixed(2)} (${totalValue ? ((valB/totalValue)*100).toFixed(1) : 0}%)`;
+
+            document.getElementById('cat-c-count').innerText = `${countC} articles`;
+            document.getElementById('cat-c-val').innerText = `${valC.toFixed(2)} (${totalValue ? ((valC/totalValue)*100).toFixed(1) : 0}%)`;
+        }
+
+        function addABCRow() {
+            abcItems.push({ name: "Nouvel Article", volume: 100, price: 5.00 });
+            renderABC();
+        }
+
+        function updateABCItem(idx, key, val) {
+            abcItems[idx][key] = key === 'name' ? val : parseFloat(val) || 0;
+            renderABC();
+        }
+
+        function removeABCItem(idx) {
+            abcItems.splice(idx, 1);
+            renderABC();
+        }
+
+        // --- MODULE 3: COÛT CONSOMMÉ VS VENDU ---
+        function calculateCostControl() {
+            const open = parseFloat(document.getElementById('opening-stock').value) || 0;
+            const purch = parseFloat(document.getElementById('purchases-stock').value) || 0;
+            const close = parseFloat(document.getElementById('closing-stock').value) || 0;
+
+            const tIn = parseFloat(document.getElementById('transfers-in').value) || 0;
+            const tOut = parseFloat(document.getElementById('transfers-out').value) || 0;
+            const staff = parseFloat(document.getElementById('staff-meals').value) || 0;
+            const sales = parseFloat(document.getElementById('total-sales').value) || 1;
+
+            const consumed = open + purch - close;
+            const sold = consumed + tIn - tOut - staff;
+            const costPercent = (sold / sales) * 100;
+
+            document.getElementById('cost-consumed').innerText = consumed.toFixed(2);
+            document.getElementById('cost-sold').innerText = sold.toFixed(2);
+            document.getElementById('real-cost-percent').innerText = `${costPercent.toFixed(2)} %`;
+        }
+
+        // --- MODULE 4: ETP & PRODUCTIVITÉ ---
+        function calculateFTE() {
+            const hours = parseFloat(document.getElementById('hours-worked').value) || 0;
+            const base = parseFloat(document.getElementById('fte-base').value) || 42;
+            const laborCost = parseFloat(document.getElementById('labor-cost').value) || 0;
+            const sales = parseFloat(document.getElementById('fte-sales').value) || 0;
+            const covers = parseFloat(document.getElementById('covers-count').value) || 1;
+
+            const fte = hours / base;
+            const laborRatio = sales > 0 ? (laborCost / sales) * 100 : 0;
+            const salesPerHour = hours > 0 ? sales / hours : 0;
+            const costPerCover = covers > 0 ? laborCost / covers : 0;
+
+            document.getElementById('fte-result').innerText = `${fte.toFixed(2)} ETP`;
+            document.getElementById('labor-cost-ratio').innerText = `${laborRatio.toFixed(1)} %`;
+            document.getElementById('sales-per-hour').innerText = salesPerHour.toFixed(2);
+            document.getElementById('cost-per-cover').innerText = costPerCover.toFixed(2);
+        }
+
+        // --- EXPORT PDF ---
         function exportPDF() {
-            // Cacher temporairement les éléments de contrôle pour l'impression
             const hideElements = document.querySelectorAll('.pdf-hide');
             hideElements.forEach(el => el.style.display = 'none');
             
-            // Modifier l'apparence des inputs pour qu'ils ressemblent à du texte brut sur le PDF
-            const inputs = document.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.style.border = 'none';
-                input.style.backgroundColor = 'transparent';
-                input.style.appearance = 'none';
-                input.style.boxShadow = 'none';
-            });
-
-            const element = document.getElementById('recipe-card');
-            const recipeName = document.getElementById('recipe-name').value || 'Fiche_Technique';
+            const element = document.getElementById('app-container');
             const opt = {
-                margin:       10,
-                filename:     `${recipeName.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 5,
+                filename: 'Rapport_Gestion_FB.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            // Générer le PDF, puis restaurer l'interface
             html2pdf().set(opt).from(element).save().then(() => {
                 hideElements.forEach(el => el.style.display = '');
-                inputs.forEach(input => {
-                    input.style.border = '';
-                    input.style.backgroundColor = '';
-                    input.style.appearance = '';
-                });
             });
         }
 
-        // Initialisation au chargement
-        window.onload = calculateTotals;
+        // Initialisation
+        window.onload = function() {
+            addRow("Filet de Bœuf", 1, "kg", 48.00, 85);
+            addRow("Feuilletage Pur Beurre", 0.5, "kg", 8.50, 100);
+            addRow("Duxelles de Champignons", 0.3, "kg", 12.00, 90);
+            renderABC();
+            calculateCostControl();
+            calculateFTE();
+        };
     </script>
 </body>
 </html>
